@@ -1,4 +1,4 @@
-Flutter Session Timeout & Local Data Storage App
+ultimate_solutions_app
 
  Overview
 This Flutter app loads order data from an API and stores it locally using SQLite for fast filtering and offline support. It also implements a session timeout feature that automatically redirects the user to the login screen after 2 minutes of inactivity or when the app is backgrounded.
@@ -29,3 +29,4 @@ This Flutter app loads order data from an API and stores it locally using SQLite
  Setup & Run
 - Tested on latest Flutter SDK.
 - Install dependencies:
+
