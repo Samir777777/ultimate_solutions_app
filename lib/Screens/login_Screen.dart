@@ -1,175 +1,180 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'dart:convert';
-import 'orders_screen.dart'; // تأكد من مسار الاستيراد الصحيح لصفحة الطلبات
-import '../Screens/Choose_Language.dart';
+import '../Screens/orders_screen.dart';
+import '../widgets/login_input_fields.dart';
+import '../widgets/login_buttons.dart';
+import '../screens/choose_language.dart';
 
 class LoginScreen extends StatefulWidget {
+  String languageCode;
+
+  LoginScreen({Key? key, required this.languageCode}) : super(key: key);
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _userIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final ApiService apiService = ApiService();
-  bool _isLoading = false; // لإظهار مؤشر تحميل
+  final ApiService _apiService = ApiService();
 
-  void _handleShowMore() {
-    // تنفيذ عند الضغط على "اظهر المزيد" إذا احتجت
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _userIdController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
-  void _handleLogin() async {
-    final userId = _userIdController.text.trim();
-    final password = _passwordController.text.trim();
-
-    if (userId.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('يرجى إدخال اسم المستخدم وكلمة المرور')),
-      );
-      return;
-    }
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
     });
 
+    final userId = _userIdController.text.trim();
+    final password = _passwordController.text.trim();
+
     final requestBody = {
       "Value": {
-        "P_LANG_NO": "1",
+        "P_LANG_NO": widget.languageCode,
         "P_DLVRY_NO": userId,
         "P_PSSWRD": password,
       }
     };
 
     try {
-      final response = await apiService.checkDeliveryLogin(requestBody);
-      setState(() {
-        _isLoading = false;
-      });
+      final response = await _apiService.checkDeliveryLogin(requestBody);
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        // يمكن التحقق من محتوى الرد إذا كان ناجحًا هنا
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم تسجيل الدخول بنجاح')),
+          SnackBar(
+            content: Text(widget.languageCode == '1' ? 'Login successful' : 'تم تسجيل الدخول بنجاح'),
+            backgroundColor: Colors.green,
+          ),
         );
-        // تنفيذ التنقل لصفحة الطلبات
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => OrdersScreen()),
+          MaterialPageRoute(
+            builder: (_) => OrderScreen(userId: userId, languageCode: widget.languageCode),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل تسجيل الدخول. تأكد من البيانات')),
+          SnackBar(
+            content: Text(widget.languageCode == '1' ? 'Login failed. Check your credentials' : 'فشل تسجيل الدخول. تأكد من البيانات'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.languageCode == '1' ? 'Error occurred: $e' : 'حدث خطأ: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('حدث خطأ، يرجى المحاولة لاحقاً')),
-      );
+    }
+  }
+
+  void _handleShowMore() {
+    // وظيفة زر Show More إذا تطلب الأمر
+    print('Show More pressed');
+  }
+
+  Future<void> _chooseLanguage() async {
+    final selectedLang = await showDialog<String>(
+      context: context,
+      builder: (context) =>  ChooseLanguageDialog(),
+    );
+    if (selectedLang != null && selectedLang != widget.languageCode) {
+      setState(() {
+        widget.languageCode = selectedLang;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isEnglish = widget.languageCode == '1';
+
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: SingleChildScrollView(
           child: Container(
             height: MediaQuery.of(context).size.height,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 60),
-                Center(
-                  child: Image.asset(
-                    'assets/logo.png',
-                    height: 140,
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                SizedBox(height: 30),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    Expanded(
+                      flex: 2,
+                      child: Image.asset(
+                        'assets/logo.png',
+                        height: 140,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                    const SizedBox(width: 30),
                     Expanded(
                       child: Container(
                         height: 120,
                         decoration: const BoxDecoration(
                           color: Colors.red,
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(30),
-                          ),
+                          borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30)),
                         ),
                         child: IconButton(
-                          icon: Icon(
-                            Icons.language,
-                            color: Color.fromARGB(255, 240, 237, 237),
-                          ),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => ChooseLanguageDialog(),
-                            );
-                          },
+                          icon: const Icon(Icons.language, color: Color.fromARGB(255, 240, 237, 237)),
+                          onPressed: _chooseLanguage,
                         ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
                 Center(
                   child: Text(
-                    'Welcome Back!',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    isEnglish ? 'Welcome Back!' : 'مرحباً بعودتك!',
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    'Log back into your account',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    isEnglish ? 'Log back into your account' : 'سجل دخول إلى حسابك',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ),
-                SizedBox(height: 40),
-                TextField(
-                  controller: _userIdController,
-                  decoration: InputDecoration(
-                    labelText: 'User ID',
-                    border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
+                const SizedBox(height: 40),
+                LoginInputFields(
+                  userIdController: _userIdController,
+                  passwordController: _passwordController,
+                  formKey: _formKey,
                 ),
-                SizedBox(height: 20),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
+                const SizedBox(height: 20),
+                LoginButtons(
+                  onShowMore: _handleShowMore,
+                  onLogin: _handleLogin,
+                  isLoading: _isLoading,
                 ),
-                SizedBox(height: 30),
-                _isLoading
-                    ? Center(child: CircularProgressIndicator())
-                    : ElevatedButton(
-                  onPressed: _handleLogin,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Text('Login', style: TextStyle(fontSize: 18)),
-                  ),
-                ),
-                SizedBox(height: 20),
-                TextButton(
-                  onPressed: _handleShowMore,
-                  child: Text('Show more'),
-                ),
+                const SizedBox(height: 40),
                 Expanded(
-                  child: Image.asset('assets/truck_image.png', fit: BoxFit.contain),
+                  child: Image.asset(
+                    'assets/truck_image.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ],
             ),
@@ -179,4 +184,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

@@ -1,15 +1,19 @@
 class Order {
-  final String id;
+  final String? id;
+  final String? billNo;
+  final String? billSrl;
+  final String? billDate;
   final String status;
-  final String description;
 
-  Order({required this.id, required this.status, required this.description});
+  Order({this.id, this.billNo, this.billSrl, this.billDate, required this.status});
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
-      id: json['OrderId'] ?? '',
-      status: json['Status'] ?? '',
-      description: json['Description'] ?? '',
+      id: json['BILL_NO']?.toString(),
+      billNo: json['BILL_NO']?.toString(),
+      billSrl: json['BILL_SRL']?.toString(),
+      billDate: json['BILL_DATE']?.toString(),
+      status: json['DLVRY_STATUS_FLG']?.toString() ?? '0',
     );
   }
 }

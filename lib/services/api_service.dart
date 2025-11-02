@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/order.dart';
@@ -6,7 +5,6 @@ import '../models/order.dart';
 class ApiService {
   static const String baseUrl = 'http://mdev.yemensoft.net:8087/OnyxDeliveryService/Service.svc/';
 
-  // دالة تسجيل الدخول
   Future<http.Response> checkDeliveryLogin(Map<String, dynamic> body) async {
     final url = Uri.parse('${baseUrl}CheckDeliveryLogin');
     return await http.post(
@@ -16,14 +14,13 @@ class ApiService {
     );
   }
 
-  // دالة جلب الطلبات
-  Future<List<Order>> fetchOrders() async {
+  Future<List<Order>> fetchOrders(String deliveryNo, String langNo) async {
     final url = Uri.parse('${baseUrl}GetDeliveryBillsItems');
 
     final requestBody = {
       "Value": {
-        "P_DLVRY_NO": "1010", // عدّل حسب المستخدم الفعلي
-        "P_LANG_NO": "1",
+        "P_DLVRY_NO": deliveryNo,
+        "P_LANG_NO": langNo,
         "P_BILL_SRL": "",
         "P_PRCSSD_FLG": ""
       }
@@ -35,13 +32,44 @@ class ApiService {
       body: jsonEncode(requestBody),
     );
 
+    print('Orders API response body: ${response.body}');
+
     if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonData = jsonDecode(response.body);
-      // عدّل المفتاح 'Orders' حسب شكل استجابة API
-      final List ordersJson = jsonData['Orders'] ?? [];
-      return ordersJson.map((json) => Order.fromJson(json)).toList();
+      final jsonData = jsonDecode(response.body);
+
+      if (jsonData['Result'] != null && jsonData['Result']['ErrNo'] == 1) {
+        return [];
+      }
+
+
+      final List billsJson = jsonData['Data']?['DeliveryBills'] ?? [];
+
+      return billsJson.map((json) => Order.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load orders');
+    }
+  }
+
+  Future<bool> updateOrderStatus(String orderId, String status) async {
+    final url = Uri.parse('${baseUrl}UpdateOrderStatus');
+    final body = {
+      "Value": {
+        "OrderID": orderId,
+        "Status": status,
+      }
+    };
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['success'] == true;
+    } else {
+      return false;
     }
   }
 }

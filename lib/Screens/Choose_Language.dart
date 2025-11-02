@@ -6,7 +6,7 @@ class ChooseLanguageDialog extends StatefulWidget {
 }
 
 class _ChooseLanguageDialogState extends State<ChooseLanguageDialog> {
-  String _selectedLang = 'en';
+  String _selectedLang = '1'; // Default English
 
   @override
   Widget build(BuildContext context) {
@@ -22,32 +22,32 @@ class _ChooseLanguageDialogState extends State<ChooseLanguageDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Choose Language',
                 style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal[900]
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.teal[900],
                 ),
               ),
             ),
             SizedBox(height: 16),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => setState(() { _selectedLang = 'ar'; }),
+                    onTap: () => setState(() {
+                      _selectedLang = '2'; // Arabic
+                    }),
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _selectedLang == 'ar' ? Color(0xffECFDF3) : Colors.white,
+                        color: _selectedLang == '2' ? Color(0xffECFDF3) : Colors.white,
                         border: Border.all(
-                          color: _selectedLang == 'ar' ? Colors.green : Colors.grey.shade400,
+                          color: _selectedLang == '2' ? Colors.green : Colors.grey.shade400,
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -71,13 +71,15 @@ class _ChooseLanguageDialogState extends State<ChooseLanguageDialog> {
                 SizedBox(width: 12),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => setState(() { _selectedLang = 'en'; }),
+                    onTap: () => setState(() {
+                      _selectedLang = '1'; // English
+                    }),
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _selectedLang == 'en' ? Color(0xffECFDF3) : Colors.white,
+                        color: _selectedLang == '1' ? Color(0xffECFDF3) : Colors.white,
                         border: Border.all(
-                          color: _selectedLang == 'en' ? Colors.green : Colors.grey.shade400,
+                          color: _selectedLang == '1' ? Colors.green : Colors.grey.shade400,
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -101,7 +103,6 @@ class _ChooseLanguageDialogState extends State<ChooseLanguageDialog> {
               ],
             ),
             SizedBox(height: 16),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
