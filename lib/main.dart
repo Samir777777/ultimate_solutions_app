@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_inactive_timer/flutter_inactive_timer.dart';
 import 'Screens/login_screen.dart';
 
 void main() {
@@ -17,6 +18,39 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String selectedLanguageCode = '1'; // '1' = English, '2' = Arabic
+  late FlutterInactiveTimer _inactivityTimer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _inactivityTimer = FlutterInactiveTimer(
+      timeoutDuration: 120,
+      notificationPer: 20,
+      onInactiveDetected: () {
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => LoginScreen(languageCode: selectedLanguageCode),
+            ),
+            (route) => false,
+          );
+        }
+      },
+      onNotification: () {
+        print('Warning: Session will expire soon due to inactivity.');
+      },
+      requireExplicitContinue: false,
+    );
+
+    _inactivityTimer.startMonitoring();
+  }
+
+  @override
+  void dispose() {
+    _inactivityTimer.stopMonitoring();
+    super.dispose();
+  }
 
   void changeLanguage(String langCode) {
     setState(() {
