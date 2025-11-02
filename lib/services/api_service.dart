@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/order.dart';
+import '../helpers/database_helper.dart';
 
 class ApiService {
   static const String baseUrl = 'http://mdev.yemensoft.net:8087/OnyxDeliveryService/Service.svc/';
@@ -43,12 +44,23 @@ class ApiService {
 
 
       final List billsJson = jsonData['Data']?['DeliveryBills'] ?? [];
+      final orders = billsJson.map((json) => Order.fromJson(json)).toList();
+      final dbHelper = DatabaseHelper.instance;
+      await dbHelper.clearOrders();
+      for (var order in orders) {
+        await dbHelper.insertOrder(order);
+      }
 
-      return billsJson.map((json) => Order.fromJson(json)).toList();
+      return orders;
     } else {
       throw Exception('Failed to load orders');
     }
   }
+      //return billsJson.map((json) => Order.fromJson(json)).toList();
+    //} else {
+      //throw Exception('Failed to load orders');
+   // }
+  //}
 
   Future<bool> updateOrderStatus(String orderId, String status) async {
     final url = Uri.parse('${baseUrl}UpdateOrderStatus');

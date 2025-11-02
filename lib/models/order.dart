@@ -16,4 +16,24 @@ class Order {
       status: json['DLVRY_STATUS_FLG']?.toString() ?? '0',
     );
   }
+
+  factory Order.fromMap(Map<String, dynamic> map) {
+    return Order(
+      id: map['id']?.toString(),
+      billNo: map['billNo']?.toString(),
+      billSrl: map['billSrl']?.toString(),
+      billDate: map['billDate']?.toString(),
+      status: map['status'] ?? '0',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'billNo': billNo,
+      'billSrl': billSrl,
+      'billDate': billDate,
+      'status': status,
+    };
+  }
 }
